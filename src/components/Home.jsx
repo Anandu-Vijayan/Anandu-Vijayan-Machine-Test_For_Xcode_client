@@ -13,6 +13,7 @@ export default function BookManager() {
     description: "",
     image: null,
   });
+  const [errors, setErrors] = useState({});
   const [deleteConfirmation, setDeleteConfirmation] = useState(null);
 
   useEffect(() => {
@@ -22,17 +23,15 @@ export default function BookManager() {
   const fetchBooks = async () => {
     try {
       const response = await axios.get(`${API_URL}/getAllBooks`);
-      // Check if the response data has the expected structure
       if (Array.isArray(response.data.getallBooksDetails)) {
-        setBooks(response.data.getallBooksDetails); // Set the books data correctly
-        // console.log("Books data received:", response.data.getallBooksDetails);
+        setBooks(response.data.getallBooksDetails);
       } else {
         console.error("Invalid data format received:", response.data);
-        setBooks([]); // Fallback to an empty array
+        setBooks([]);
       }
     } catch (error) {
       console.error("Error fetching books:", error);
-      setBooks([]); // Fallback to an empty array in case of error
+      setBooks([]);
     }
   };
 
@@ -42,11 +41,37 @@ export default function BookManager() {
   };
 
   const handleImageUpload = (e) => {
-    setNewBook((prev) => ({ ...prev, image: e.target.files[0] }));
+    const file = e.target.files[0];
+    if (file && file.type.startsWith("image/")) {
+      setNewBook((prev) => ({ ...prev, image: file }));
+      setErrors((prev) => ({ ...prev, image: null })); // Clear error if valid image
+    } else {
+      setErrors((prev) => ({ ...prev, image: "Please select a valid image file" }));
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    if (!newBook.title || newBook.title.length < 3) {
+      newErrors.title = "Title is required and should be at least 3 characters.";
+    }
+    if (!newBook.author || newBook.author.length < 3) {
+      newErrors.author = "Author is required and should be at least 3 characters.";
+    }
+    if (!newBook.description || newBook.description.length < 10) {
+      newErrors.description = "Description is required and should be at least 10 characters.";
+    }
+    if (!newBook.image) {
+      newErrors.image = "Image is required.";
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validateForm()) return;
+
     const formData = new FormData();
     formData.append("title", newBook.title);
     formData.append("author", newBook.author);
@@ -60,6 +85,7 @@ export default function BookManager() {
       await fetchBooks();
       setIsFormOpen(false);
       setNewBook({ title: "", author: "", description: "", image: null });
+      setErrors({});
     } catch (error) {
       console.error("Error adding book:", error);
     }
@@ -101,6 +127,8 @@ export default function BookManager() {
                 required
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
+              {errors.title && <p className="text-red-500 text-sm">{errors.title}</p>}
+
               <input
                 name="author"
                 placeholder="Author"
@@ -109,6 +137,8 @@ export default function BookManager() {
                 required
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
+              {errors.author && <p className="text-red-500 text-sm">{errors.author}</p>}
+
               <textarea
                 name="description"
                 placeholder="Description"
@@ -117,6 +147,10 @@ export default function BookManager() {
                 required
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
+              {errors.description && (
+                <p className="text-red-500 text-sm">{errors.description}</p>
+              )}
+
               <input
                 type="file"
                 accept="image/*"
@@ -124,6 +158,8 @@ export default function BookManager() {
                 required
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
+              {errors.image && <p className="text-red-500 text-sm">{errors.image}</p>}
+
               <div className="flex justify-end space-x-2">
                 <button
                   type="button"
@@ -144,6 +180,7 @@ export default function BookManager() {
         </div>
       )}
 
+      {/* Render the book cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {books.length > 0 ? (
           books.map((book) => (
@@ -152,7 +189,6 @@ export default function BookManager() {
               className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col"
             >
               <div className="p-4 flex-grow">
-                {/* Check if there is an image or fallback to a placeholder */}
                 {book.images.length > 0 ? (
                   <img
                     src={`${API_URL}/public/${book.images[0]}`}
@@ -164,7 +200,6 @@ export default function BookManager() {
                     No Image Available
                   </div>
                 )}
-
                 <h2 className="text-xl font-semibold mb-2">{book.title}</h2>
                 <p className="text-sm text-gray-600 mb-2">By {book.author}</p>
                 <p className="text-sm">{book.description}</p>
@@ -185,12 +220,13 @@ export default function BookManager() {
         )}
       </div>
 
+      {/* Confirm deletion modal */}
       {deleteConfirmation && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
           <div className="bg-white p-6 rounded-lg w-full max-w-md">
             <h2 className="text-2xl font-bold mb-4">Confirm Deletion</h2>
-            <p className="mb-4">Are you sure you want to delete this book?</p>
-            <div className="flex justify-end space-x-2">
+            <p>Are you sure you want to delete this book?</p>
+            <div className="flex justify-end space-x-2 mt-6">
               <button
                 onClick={() => setDeleteConfirmation(null)}
                 className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-100 focus:outline-none"
@@ -201,11 +237,11 @@ export default function BookManager() {
                 onClick={() => handleDelete(deleteConfirmation)}
                 className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500"
               >
-                Confirm Delete
+                Delete
               </button>
             </div>
           </div>
-        </div> 
+        </div>
       )}
     </div>
   );

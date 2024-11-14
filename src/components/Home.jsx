@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { PlusIcon, XIcon } from "lucide-react";
 
-const API_URL = import.meta.env.VITE_BASE_URL;
+const API_URL = import.meta.env.VITEBASEURL;
 
 export default function BookManager() {
   const [books, setBooks] = useState([]);

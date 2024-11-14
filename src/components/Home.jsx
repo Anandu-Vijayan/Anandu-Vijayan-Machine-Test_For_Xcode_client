@@ -25,7 +25,7 @@ export default function BookManager() {
       // Check if the response data has the expected structure
       if (Array.isArray(response.data.getallBooksDetails)) {
         setBooks(response.data.getallBooksDetails); // Set the books data correctly
-        console.log("Books data received:", response.data.getallBooksDetails);
+        // console.log("Books data received:", response.data.getallBooksDetails);
       } else {
         console.error("Invalid data format received:", response.data);
         setBooks([]); // Fallback to an empty array

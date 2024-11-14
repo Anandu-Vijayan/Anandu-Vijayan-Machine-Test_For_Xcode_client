@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { PlusIcon, XIcon } from "lucide-react";
 
-const API_URL = import.meta.env.VITEBASEURL;
+const API_URL = import.meta.env.VITE_BASE_URL;
 
 export default function BookManager() {
   const [books, setBooks] = useState([]);
@@ -22,7 +22,6 @@ export default function BookManager() {
   const fetchBooks = async () => {
     try {
       const response = await axios.get(`${API_URL}/getAllBooks`);
-
       // Check if the response data has the expected structure
       if (Array.isArray(response.data.getallBooksDetails)) {
         setBooks(response.data.getallBooksDetails); // Set the books data correctly

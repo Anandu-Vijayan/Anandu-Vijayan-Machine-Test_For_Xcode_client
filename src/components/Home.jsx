@@ -41,29 +41,35 @@ export default function BookManager() {
   };
 
   const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (file && file.type.startsWith("image/")) {
-      setNewBook((prev) => ({ ...prev, image: file }));
-      setErrors((prev) => ({ ...prev, image: null })); // Clear error if valid image
-    } else {
-      setErrors((prev) => ({ ...prev, image: "Please select a valid image file" }));
-    }
+    setNewBook((prev) => ({ ...prev, image: e.target.files[0] }));
   };
 
   const validateForm = () => {
     const newErrors = {};
+
+    // Regular expression to match only letters, numbers, hyphens, and underscores
+    const allowedChars = /^[a-zA-Z0-9-_]+$/;
+
     if (!newBook.title || newBook.title.length < 3) {
       newErrors.title = "Title is required and should be at least 3 characters.";
+    } else if (!allowedChars.test(newBook.title)) {
+      newErrors.title = "Title can only contain letters, numbers, hyphens (-), and underscores (_).";
     }
+
     if (!newBook.author || newBook.author.length < 3) {
       newErrors.author = "Author is required and should be at least 3 characters.";
+    } else if (!allowedChars.test(newBook.author)) {
+      newErrors.author = "Author can only contain letters, numbers, hyphens (-), and underscores (_).";
     }
+
     if (!newBook.description || newBook.description.length < 10) {
       newErrors.description = "Description is required and should be at least 10 characters.";
     }
+
     if (!newBook.image) {
       newErrors.image = "Image is required.";
     }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -85,7 +91,6 @@ export default function BookManager() {
       await fetchBooks();
       setIsFormOpen(false);
       setNewBook({ title: "", author: "", description: "", image: null });
-      setErrors({});
     } catch (error) {
       console.error("Error adding book:", error);
     }
@@ -128,7 +133,7 @@ export default function BookManager() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               {errors.title && <p className="text-red-500 text-sm">{errors.title}</p>}
-
+              
               <input
                 name="author"
                 placeholder="Author"
@@ -147,9 +152,7 @@ export default function BookManager() {
                 required
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-              {errors.description && (
-                <p className="text-red-500 text-sm">{errors.description}</p>
-              )}
+              {errors.description && <p className="text-red-500 text-sm">{errors.description}</p>}
 
               <input
                 type="file"
@@ -180,14 +183,10 @@ export default function BookManager() {
         </div>
       )}
 
-      {/* Render the book cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {books.length > 0 ? (
           books.map((book) => (
-            <div
-              key={book._id}
-              className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col"
-            >
+            <div key={book._id} className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col">
               <div className="p-4 flex-grow">
                 {book.images.length > 0 ? (
                   <img
@@ -200,6 +199,7 @@ export default function BookManager() {
                     No Image Available
                   </div>
                 )}
+
                 <h2 className="text-xl font-semibold mb-2">{book.title}</h2>
                 <p className="text-sm text-gray-600 mb-2">By {book.author}</p>
                 <p className="text-sm">{book.description}</p>
@@ -220,7 +220,6 @@ export default function BookManager() {
         )}
       </div>
 
-      {/* Confirm deletion modal */}
       {deleteConfirmation && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
           <div className="bg-white p-6 rounded-lg w-full max-w-md">
